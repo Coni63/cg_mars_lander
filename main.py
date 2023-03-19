@@ -1,9 +1,5 @@
 import glob
-from functools import reduce
-import json
-import random
-from game import GameManager, Action
-
+from game import GameManager
 
 
 if __name__ == "__main__":

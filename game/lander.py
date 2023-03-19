@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import math
+from typing import Tuple
 
 from .point import Point
 from .ground import Ground
@@ -39,7 +40,12 @@ class Lander(Point):
         self._move()
         curr_pos = Point(self.x, self.y)
 
-        reward = self._check_landing(prev_pos, curr_pos, ground)
+        reward, intersection_pt = self._check_landing(prev_pos, curr_pos, ground)
+        if intersection_pt is not None:
+            print(intersection_pt)
+            self.x = intersection_pt.x
+            self.y = intersection_pt.y
+
         self._end()
         return reward
 
@@ -51,9 +57,9 @@ class Lander(Point):
         print(f"Pod Thrust         : {self.thrust}", file=sys.stderr, flush=True)
         print(f"Pod Fuel           : {self.fuel}", file=sys.stderr, flush=True)
 
-    def _rotate(self, angle: float) -> None:
+    def _rotate(self, target_angle: float) -> None:
         # We can't turn more than 15 degrees in one turn
-        self.angle += max(min(angle, 15.0), -15.0)
+        self.angle += max(min(target_angle - self.angle, 15.0), -15.0)
 
         # The angle is limited to -90 / 90
         self.angle = max(min(self.angle, 90), -90)
@@ -73,22 +79,20 @@ class Lander(Point):
     def _is_valid_for_landing(self):
         return self.angle == 0 and abs(self.vx) <= 40 and abs(self.vy) <= 20
 
-    def _check_landing(self, prev_pos: Point, curr_pos: Point, ground: Ground) -> int:
+    def _check_landing(self, prev_pos: Point, curr_pos: Point, ground: Ground) -> Tuple[int, Point]:
         for p1, p2, is_landing_area in ground:
-            if Intersection.doIntersect(p1, p2, prev_pos, curr_pos):
+            pt = Intersection.doIntersect(p1, p2, prev_pos, curr_pos)
+            if pt is not None:
                 if is_landing_area:
                     if self._is_valid_for_landing():
-                        return 1
+                        return 1, pt
                     else:
-                        return -1
+                        return -1, pt
                 else:
-                    return -1
-        return 0
+                    return -1, pt
+        return 0, None
 
     def _move(self):
-        self.x += self.vx
-        self.y += self.vy
-
         alpha = math.radians(self.angle)
         ax = -self.thrust * math.sin(alpha)
         ay = self.thrust * math.cos(alpha) - 3.711
@@ -96,8 +100,8 @@ class Lander(Point):
         self.x += self.vx + 0.5 * ax
         self.y += self.vy + 0.5 * ay
 
-        self.vx += self.ax
-        self.vy += self.ay
+        self.vx += ax
+        self.vy += ay
 
         self.fuel -= self.thrust
 

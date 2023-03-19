@@ -13,18 +13,22 @@ class GameManager:
     ground: Ground
     lander: Lander
     turn: int
+    done: bool
 
     def __init__(self):
         self.data = None
         self.ground = []
         self.lander = None
         self.turn = 0
+        self.done = False
 
     def clone(self) -> GameManager:
         copy = GameManager()
         copy.data = self.data
         copy.ground = self.ground  # no need to deepcopy
         copy.lander = self.lander.clone()
+        copy.turn = self.turn
+        copy.done = self.done
         return copy
 
     def set_testcase(self, testcase: str):
@@ -58,3 +62,4 @@ class GameManager:
         self.lander = Lander(x=x, y=y, vx=hs, vy=vs, fuel=f, angle=r, thrust=p)
 
         self.turn = 0
+        self.done = False
