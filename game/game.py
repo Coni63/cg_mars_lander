@@ -39,13 +39,13 @@ class GameManager:
         return self.lander, self.ground
 
     def apply_action(self, action: Action) -> tuple[Lander, bool]:
-        reward = self.lander.applyMove(action=action, ground=self.ground)
+        data = self.lander.applyMove(action=action, ground=self.ground)
         self.turn += 1
 
         # game is done when the target is the last checkpoint which is a fictive one aligned with the 2 last ones
-        self.done = reward != 0
+        self.done = data["reward"] != 0
 
-        return self.lander, self.done, reward
+        return self.lander, self.done, data
 
     def reset(self):
         s = self.data["testIn"].split("\n")

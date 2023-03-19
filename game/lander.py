@@ -42,12 +42,14 @@ class Lander(Point):
 
         reward, intersection_pt = self._check_landing(prev_pos, curr_pos, ground)
         if intersection_pt is not None:
-            # print(intersection_pt)
             self.x = intersection_pt.x
             self.y = intersection_pt.y
 
         self._end()
-        return reward
+        return {
+            "reward": reward,
+            "intersection_pt": intersection_pt
+        }
 
     def describe(self):  # pragma: no cover
         print("", file=sys.stderr, flush=True)
