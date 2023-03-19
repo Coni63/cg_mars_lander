@@ -45,7 +45,7 @@ class GameManager:
         # game is done when the target is the last checkpoint which is a fictive one aligned with the 2 last ones
         self.done = reward != 0
 
-        return self.lander, self.done
+        return self.lander, self.done, reward
 
     def reset(self):
         s = self.data["testIn"].split("\n")

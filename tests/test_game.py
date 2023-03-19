@@ -16,34 +16,52 @@ class TestGame(unittest.TestCase):
         # game.lander.describe()
 
         actions = [Action.from_str(s) for s in actions_str.split(";")]
-        targets = [[int(x) for x in s.split()] for s in positions_str.split(";")]
+        start_state, *states = [[int(x) for x in s.split()] for s in positions_str.split(";")]  # 1 step longer that actions
 
-        self.assertEqual(game.lander.x, targets[0][0])
-        self.assertEqual(game.lander.y, targets[0][1])
-        self.assertEqual(game.lander.vx, targets[0][2])
-        self.assertEqual(game.lander.vy, targets[0][3])
-        self.assertEqual(game.lander.angle, targets[0][4])
-        self.assertEqual(game.lander.thrust, targets[0][5])
+        self.assertEqual(game.lander.x, start_state[0])
+        self.assertEqual(game.lander.y, start_state[1])
+        self.assertEqual(game.lander.vx, start_state[2])
+        self.assertEqual(game.lander.vy, start_state[3])
+        self.assertEqual(game.lander.angle, start_state[4])
+        self.assertEqual(game.lander.thrust, start_state[5])
 
-        for i, (action, (x, y, vx, vy, angle, thrust)) in enumerate(zip(actions, targets[1:])):
+        for i, (action, (x, y, vx, vy, angle, thrust)) in enumerate(zip(actions, states)):
             game.apply_action(action=action)
 
             # game.lander.describe()
-            self.assertEqual(round(game.lander.x), x, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.y), y, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.vx), vx, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.vy), vy, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.angle), angle, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.thrust), thrust, msg=f"Error step {i} / {len(actions)-2}")
+
+            self.assertEqual(round(game.lander.x), x, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.y), y, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.vx), vx, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.vy), vy, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.angle), angle, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.thrust), thrust, msg=f"Error step {i+1} / {len(actions)}")
             self.assertFalse(game.done)
 
-        game.apply_action(action=actions[-1])
-        self.assertEqual(game.lander.fuel, 145)
+        lander, done, reward = game.apply_action(action=actions[-1])
         self.assertTrue(game.done)
-        self.assertEqual(round(game.lander.x), 4471)
-        self.assertEqual(game.lander.y, 150)
+        self.assertEqual(game.lander.fuel, 145)
+        self.assertEqual(int(game.lander.x), 4470)
+        self.assertEqual(round(game.lander.y), 150)
+        self.assertEqual(round(game.lander.vx), 7)
+        self.assertEqual(round(game.lander.vy), -32)
+        self.assertEqual(round(game.lander.angle), 0)
+        self.assertEqual(round(game.lander.thrust), 0)
+        self.assertEqual(reward, 1)
 
     def test_2(self):
+        """
+        From a fixed simulation on CG, we can have:
+
+        - state 0
+        - action 0
+        - state 1
+        - action 1
+        -...
+        - action N
+
+        On peut donc verifier qu'apres l'action N, on a bien le state N+1
+        """
         actions_str = "55 0;50 1;45 1;40 2;32 2;30 2;25 2;18 3;13 3;10 3;5 3;0 3;-5 3;-7 4;-12 4;-17 4;-20 4;-23 4;-25 4;-30 4;-30 4;-33 4;-36 4;-38 4;-38 4;-40 4;-41 4;-40 4;-43 4;-44 4;-43 4;-44 4;-46 4;-46 4;-46 4;-46 4;-47 4;-46 4;-44 4;-41 4;-41 4;-38 4;-36 4;-34 4;-31 4;-29 4;-29 4;-26 4;-24 4;-24 4;-21 4;-21 4;-19 4;-19 4;-17 4;-17 4;-14 4;-14 4;-12 4;-12 4;-12 4;-12 4;-9 4;-9 4;-9 4;-9 4;-9 4;-7 4;-7 4;-7 4;-7 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4"
         positions_str = "6500 2800 -100 0 90 0;6400 2798 -100 -4 75 0;6300 2793 -101 -7 60 1;6198 2784 -102 -10 45 1;6096 2773 -103 -12 40 2;5993 2760 -104 -14 32 2;5888 2745 -105 -16 30 2;5783 2728 -106 -18 25 2;5677 2710 -107 -19 18 3;5570 2690 -107 -20 13 3;5462 2670 -108 -20 10 3;5354 2650 -108 -21 5 3;5246 2628 -108 -22 0 3;5138 2606 -108 -23 -5 3;5030 2584 -107 -22 -7 4;4923 2561 -107 -22 -12 4;4817 2539 -105 -22 -17 4;4713 2517 -104 -22 -20 4;4609 2495 -102 -22 -23 4;4508 2473 -101 -22 -25 4;4408 2451 -99 -22 -30 4;4310 2429 -97 -23 -30 4;4214 2406 -95 -23 -33 4;4121 2383 -92 -23 -36 4;4030 2359 -90 -24 -38 4;3941 2335 -87 -24 -38 4;3855 2310 -85 -25 -40 4;3772 2285 -82 -26 -41 4;3691 2259 -80 -26 -40 4;3613 2232 -77 -27 -43 4;3538 2204 -74 -28 -44 4;3465 2176 -71 -29 -43 4;3395 2146 -69 -30 -44 4;3328 2116 -66 -31 -46 4;3264 2085 -63 -32 -46 4;3202 2053 -60 -33 -46 4;3144 2020 -57 -33 -46 4;3088 1986 -54 -34 -47 4;3036 1951 -51 -35 -46 4;2986 1915 -48 -36 -44 4;2939 1879 -46 -37 -41 4;2894 1842 -43 -38 -41 4;2852 1804 -41 -38 -38 4;2813 1765 -38 -39 -36 4;2775 1727 -36 -39 -34 4;2740 1687 -34 -39 -31 4;2707 1648 -32 -40 -29 4;2676 1608 -30 -40 -29 4;2646 1569 -28 -40 -26 4;2619 1529 -27 -40 -24 4;2593 1489 -25 -40 -24 4;2568 1449 -24 -40 -21 4;2545 1409 -22 -40 -21 4;2524 1369 -21 -40 -19 4;2503 1329 -20 -40 -19 4;2484 1290 -19 -40 -17 4;2466 1250 -17 -40 -17 4;2449 1211 -16 -39 -14 4;2433 1171 -15 -39 -14 4;2418 1132 -15 -39 -12 4;2404 1093 -14 -39 -12 4;2391 1055 -13 -39 -12 4;2378 1016 -12 -38 -12 4;2366 978 -12 -38 -9 4;2355 940 -11 -38 -9 4;2344 902 -10 -38 -9 4;2335 865 -10 -37 -9 4;2325 827 -9 -37 -9 4;2316 790 -9 -37 -7 4;2308 754 -8 -37 -7 4;2300 717 -8 -36 -7 4;2293 681 -7 -36 -7 4;2286 645 -7 -36 0 4;2279 609 -7 -36 0 4;2272 574 -7 -35 0 4;2265 539 -7 -35 0 4;2258 504 -7 -35 0 4;2251 469 -7 -34 0 4;2244 435 -7 -34 0 4;2237 401 -7 -34 0 4;2230 367 -7 -34 0 4;2223 334 -7 -33 0 4;2215 301 -7 -33 0 4;2208 268 -7 -33 0 4;2201 235 -7 -32 0 4;2194 203 -7 -32 0 4;2187 171 -7 -32 0 4;2180 139 -7 -32 0 4;2173 108 -7 -31 0 4"
 
@@ -54,32 +72,38 @@ class TestGame(unittest.TestCase):
         # game.lander.describe()
 
         actions = [Action.from_str(s) for s in actions_str.split(";")]
-        targets = [[int(x) for x in s.split()] for s in positions_str.split(";")]
+        start_state, *states = [[int(x) for x in s.split()] for s in positions_str.split(";")]  # 1 step longer that actions
 
-        self.assertEqual(game.lander.x, targets[0][0])
-        self.assertEqual(game.lander.y, targets[0][1])
-        self.assertEqual(game.lander.vx, targets[0][2])
-        self.assertEqual(game.lander.vy, targets[0][3])
-        self.assertEqual(game.lander.angle, targets[0][4])
-        self.assertEqual(game.lander.thrust, targets[0][5])
+        self.assertEqual(game.lander.x, start_state[0])
+        self.assertEqual(game.lander.y, start_state[1])
+        self.assertEqual(game.lander.vx, start_state[2])
+        self.assertEqual(game.lander.vy, start_state[3])
+        self.assertEqual(game.lander.angle, start_state[4])
+        self.assertEqual(game.lander.thrust, start_state[5])
 
-        for i, (action, (x, y, vx, vy, angle, thrust)) in enumerate(zip(actions, targets[1:])):
+        for i, (action, (x, y, vx, vy, angle, thrust)) in enumerate(zip(actions, states)):
             game.apply_action(action=action)
 
             # game.lander.describe()
-            self.assertEqual(round(game.lander.x), x, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.y), y, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.vx), vx, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.vy), vy, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.angle), angle, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.thrust), thrust, msg=f"Error step {i} / {len(actions)-2}")
+
+            self.assertEqual(round(game.lander.x), x, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.y), y, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.vx), vx, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.vy), vy, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.angle), angle, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.thrust), thrust, msg=f"Error step {i+1} / {len(actions)}")
             self.assertFalse(game.done)
 
-        game.apply_action(action=actions[-1])
-        self.assertEqual(game.lander.fuel, 268)
+        lander, done, reward = game.apply_action(action=actions[-1])
         self.assertTrue(game.done)
+        self.assertEqual(game.lander.fuel, 268)
         self.assertEqual(round(game.lander.x), 2171)
-        self.assertEqual(game.lander.y, 100)
+        self.assertEqual(round(game.lander.y), 100)
+        self.assertEqual(round(game.lander.vx), -7)
+        self.assertEqual(round(game.lander.vy), -31)
+        self.assertEqual(round(game.lander.angle), 0)
+        self.assertEqual(round(game.lander.thrust), 4)
+        self.assertEqual(reward, 1)
 
     def test_3(self):
         actions_str = "-41 0;-43 1;-48 1;-53 2;-58 2;-60 2;-65 2;-68 4;-71 4;-70 4;-73 4;-72 4;-68 4;-65 4;-63 4;-58 4;-55 4;-53 4;-48 4;-46 4;-46 4;-41 4;-38 4;-38 4;-36 4;-34 4;-31 4;-29 4;-29 4;-26 4;-24 4;-21 4;-21 4;-19 4;-19 4;-19 4;-17 4;-17 4;-14 4;-14 4;-12 4;-12 4;-12 4;-12 4;-9 4;-9 4;-9 4;-9 4;-7 4;-7 4;-7 4;-7 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4"
@@ -92,32 +116,38 @@ class TestGame(unittest.TestCase):
         # game.lander.describe()
 
         actions = [Action.from_str(s) for s in actions_str.split(";")]
-        targets = [[int(x) for x in s.split()] for s in positions_str.split(";")]
+        start_state, *states = [[int(x) for x in s.split()] for s in positions_str.split(";")]  # 1 step longer that actions
 
-        self.assertEqual(game.lander.x, targets[0][0])
-        self.assertEqual(game.lander.y, targets[0][1])
-        self.assertEqual(game.lander.vx, targets[0][2])
-        self.assertEqual(game.lander.vy, targets[0][3])
-        self.assertEqual(game.lander.angle, targets[0][4])
-        self.assertEqual(game.lander.thrust, targets[0][5])
+        self.assertEqual(game.lander.x, start_state[0])
+        self.assertEqual(game.lander.y, start_state[1])
+        self.assertEqual(game.lander.vx, start_state[2])
+        self.assertEqual(game.lander.vy, start_state[3])
+        self.assertEqual(game.lander.angle, start_state[4])
+        self.assertEqual(game.lander.thrust, start_state[5])
 
-        for i, (action, (x, y, vx, vy, angle, thrust)) in enumerate(zip(actions, targets[1:])):
+        for i, (action, (x, y, vx, vy, angle, thrust)) in enumerate(zip(actions, states)):
             game.apply_action(action=action)
 
             # game.lander.describe()
-            self.assertEqual(round(game.lander.x), x, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.y), y, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.vx), vx, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.vy), vy, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.angle), angle, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.thrust), thrust, msg=f"Error step {i} / {len(actions)-2}")
+
+            self.assertEqual(round(game.lander.x), x, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.y), y, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.vx), vx, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.vy), vy, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.angle), angle, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.thrust), thrust, msg=f"Error step {i+1} / {len(actions)}")
             self.assertFalse(game.done)
 
-        game.apply_action(action=actions[-1])
-        self.assertEqual(game.lander.fuel, 461)
+        lander, done, reward = game.apply_action(action=actions[-1])
         self.assertTrue(game.done)
-        self.assertEqual(round(game.lander.x), 4061)
-        self.assertEqual(game.lander.y, 150)
+        self.assertEqual(game.lander.fuel, 461)
+        self.assertEqual(int(game.lander.x), 4016)
+        self.assertEqual(int(game.lander.y), 150)
+        self.assertEqual(round(game.lander.vx), -7)
+        self.assertEqual(round(game.lander.vy), -32)
+        self.assertEqual(round(game.lander.angle), 0)
+        self.assertEqual(round(game.lander.thrust), 4)
+        self.assertEqual(reward, 1)
 
     def test_4(self):
         actions_str = "-55 0;-50 1;-45 1;-40 2;-32 2;-30 2;-25 2;-18 3;-13 3;-10 3;-5 3;0 3;5 3;7 4;12 4;17 4;20 4;23 4;25 4;30 4;30 4;33 4;36 4;38 4;38 4;40 4;41 4;40 4;43 4;44 4;43 4;44 4;46 4;46 4;46 4;46 4;47 4;46 4;44 4;41 4;41 4;38 4;36 4;34 4;31 4;29 4;29 4;26 4;24 4;24 4;21 4;21 4;19 4;19 4;17 4;17 4;14 4;14 4;12 4;12 4;12 4;12 4;9 4;9 4;9 4;9 4;9 4;7 4;7 4;7 4;7 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4;0 4"
@@ -130,32 +160,38 @@ class TestGame(unittest.TestCase):
         # game.lander.describe()
 
         actions = [Action.from_str(s) for s in actions_str.split(";")]
-        targets = [[int(x) for x in s.split()] for s in positions_str.split(";")]
+        start_state, *states = [[int(x) for x in s.split()] for s in positions_str.split(";")]  # 1 step longer that actions
 
-        self.assertEqual(game.lander.x, targets[0][0])
-        self.assertEqual(game.lander.y, targets[0][1])
-        self.assertEqual(game.lander.vx, targets[0][2])
-        self.assertEqual(game.lander.vy, targets[0][3])
-        self.assertEqual(game.lander.angle, targets[0][4])
-        self.assertEqual(game.lander.thrust, targets[0][5])
+        self.assertEqual(game.lander.x, start_state[0])
+        self.assertEqual(game.lander.y, start_state[1])
+        self.assertEqual(game.lander.vx, start_state[2])
+        self.assertEqual(game.lander.vy, start_state[3])
+        self.assertEqual(game.lander.angle, start_state[4])
+        self.assertEqual(game.lander.thrust, start_state[5])
 
-        for i, (action, (x, y, vx, vy, angle, thrust)) in enumerate(zip(actions, targets[1:])):
+        for i, (action, (x, y, vx, vy, angle, thrust)) in enumerate(zip(actions, states)):
             game.apply_action(action=action)
 
             # game.lander.describe()
-            self.assertEqual(round(game.lander.x), x, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.y), y, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.vx), vx, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.vy), vy, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.angle), angle, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.thrust), thrust, msg=f"Error step {i} / {len(actions)-2}")
+
+            self.assertEqual(round(game.lander.x), x, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.y), y, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.vx), vx, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.vy), vy, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.angle), angle, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.thrust), thrust, msg=f"Error step {i+1} / {len(actions)}")
             self.assertFalse(game.done)
 
-        game.apply_action(action=actions[-1])
-        self.assertEqual(game.lander.fuel, 492)
+        lander, done, reward = game.apply_action(action=actions[-1])
         self.assertTrue(game.done)
+        self.assertEqual(game.lander.fuel, 492)
         self.assertEqual(round(game.lander.x), 4785)
-        self.assertEqual(game.lander.y, 200)
+        self.assertEqual(round(game.lander.y), 200)
+        self.assertEqual(round(game.lander.vx), 7)
+        self.assertEqual(round(game.lander.vy), -33)
+        self.assertEqual(round(game.lander.angle), 0)
+        self.assertEqual(round(game.lander.thrust), 4)
+        self.assertEqual(reward, 1)
 
     def test_5(self):
         actions_str = "90 0;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 4;6 0;6 4;6 4;0 4;0 0;0 4;0 4;0 0;0 4;0 4;0 4;0 0;0 4;0 4;-21 0;-23 4;-26 4;-26 4;-26 4;-26 4;-29 4;-31 4;-33 4;-32 4;-32 4;-31 4;-32 4;-34 4;-34 4;-34 4;-31 4;-32 4;-34 4;-32 4;-31 3;-29 3;-29 4;-26 4;-26 4;-24 4;-21 4;-21 4;-19 4;-19 3;0 3;0 3;0 0;0 0;0 0;0 0;0 0"
@@ -168,29 +204,71 @@ class TestGame(unittest.TestCase):
         # game.lander.describe()
 
         actions = [Action.from_str(s) for s in actions_str.split(";")]
-        targets = [[int(x) for x in s.split()] for s in positions_str.split(";")]
+        start_state, *states = [[int(x) for x in s.split()] for s in positions_str.split(";")]  # 1 step longer that actions
 
-        self.assertEqual(game.lander.x, targets[0][0])
-        self.assertEqual(game.lander.y, targets[0][1])
-        self.assertEqual(game.lander.vx, targets[0][2])
-        self.assertEqual(game.lander.vy, targets[0][3])
-        self.assertEqual(game.lander.angle, targets[0][4])
-        self.assertEqual(game.lander.thrust, targets[0][5])
+        self.assertEqual(game.lander.x, start_state[0])
+        self.assertEqual(game.lander.y, start_state[1])
+        self.assertEqual(game.lander.vx, start_state[2])
+        self.assertEqual(game.lander.vy, start_state[3])
+        self.assertEqual(game.lander.angle, start_state[4])
+        self.assertEqual(game.lander.thrust, start_state[5])
 
-        for i, (action, (x, y, vx, vy, angle, thrust)) in enumerate(zip(actions, targets[1:])):
+        for i, (action, (x, y, vx, vy, angle, thrust)) in enumerate(zip(actions, states)):
             game.apply_action(action=action)
 
             # game.lander.describe()
-            self.assertEqual(round(game.lander.x), x, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.y), y, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.vx), vx, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.vy), vy, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.angle), angle, msg=f"Error step {i} / {len(actions)-2}")
-            self.assertEqual(round(game.lander.thrust), thrust, msg=f"Error step {i} / {len(actions)-2}")
+
+            self.assertEqual(round(game.lander.x), x, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.y), y, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.vx), vx, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.vy), vy, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.angle), angle, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.thrust), thrust, msg=f"Error step {i+1} / {len(actions)}")
             self.assertFalse(game.done)
 
-        game.apply_action(action=actions[-1])
-        self.assertEqual(game.lander.fuel, 657)
+        lander, done, reward = game.apply_action(action=actions[-1])
         self.assertTrue(game.done)
-        self.assertEqual(round(game.lander.x), 1094)
-        self.assertEqual(game.lander.y, 2100)
+        self.assertEqual(game.lander.fuel, 657)
+        self.assertEqual(int(game.lander.x), 1094)
+        self.assertEqual(int(game.lander.y), 2100)
+        self.assertEqual(round(game.lander.vx), -20)
+        self.assertEqual(round(game.lander.vy), -28)
+        self.assertEqual(round(game.lander.angle), 0)
+        self.assertEqual(round(game.lander.thrust), 0)
+        self.assertEqual(reward, 1)
+
+    def test_6(self):
+        # test du crash sur la bonne zone
+        game = GameManager()
+        game.set_testcase("testcases/test3.json")
+
+        while True:
+            lander, done, reward = game.apply_action(action=Action(0, 0))
+            if done:
+                break
+
+        self.assertEqual(reward, -1)
+        self.assertEqual(int(game.lander.x), 3427)
+        self.assertEqual(round(game.lander.y), 637)
+        self.assertEqual(round(game.lander.vx), -90)
+        self.assertEqual(round(game.lander.vy), -130)
+        self.assertEqual(round(game.lander.angle), 0)
+        self.assertEqual(round(game.lander.thrust), 0)
+
+    def test_7(self):
+        # test du crash sur la mauvaise zone
+        game = GameManager()
+        game.set_testcase("testcases/test4.json")
+
+        while True:
+            lander, done, reward = game.apply_action(action=Action(0, 0))
+            if done:
+                break
+
+        self.assertEqual(reward, -1)
+        self.assertEqual(int(game.lander.x), 3279)
+        self.assertEqual(int(game.lander.y), 1265)
+        self.assertEqual(round(game.lander.vx), 100)
+        self.assertEqual(round(game.lander.vy), -104)
+        self.assertEqual(round(game.lander.angle), 0)
+        self.assertEqual(round(game.lander.thrust), 0)

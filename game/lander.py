@@ -77,7 +77,7 @@ class Lander(Point):
         self.thrust = min(self.thrust + offset, self.fuel)
 
     def _is_valid_for_landing(self):
-        return self.angle == 0 and abs(self.vx) <= 40 and abs(self.vy) <= 20
+        return self.angle == 0 and abs(self.vx) < 20.5 and abs(self.vy) < 40.5  # finally it is working if the round is below 40 or 20
 
     def _check_landing(self, prev_pos: Point, curr_pos: Point, ground: Ground) -> Tuple[int, Point]:
         for p1, p2, is_landing_area in ground:
@@ -87,6 +87,7 @@ class Lander(Point):
                     if self._is_valid_for_landing():
                         return 1, pt
                     else:
+                        print("jkgfh")
                         return -1, pt
                 else:
                     return -1, pt

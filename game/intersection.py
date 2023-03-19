@@ -17,10 +17,11 @@ class Intersection:
             dx3 = q1.x - p1.x
             dy3 = q1.y - p1.y
             t = (dx3*dy2 - dy3*dx2) / det
-            u = (dx1*dy3 - dy1*dx3) / det
-            if -1 <= t <= 1 and -1 <= u <= 1:
+            u = -(dx1*dy3 - dy1*dx3) / det
+            if 0 <= t <= 1 and 0 <= u <= 1:
                 x = p1.x + t*dx1
                 y = p1.y + t*dy1
+                # print(p1, p2, q1, q2, Point(x, y))
                 return Point(x, y)
             else:
                 return None
