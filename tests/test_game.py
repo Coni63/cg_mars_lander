@@ -59,7 +59,7 @@ class TestGame(unittest.TestCase):
         self.assertEqual(round(game.lander.vy), -32)
         self.assertEqual(round(game.lander.angle), 0)
         self.assertEqual(round(game.lander.thrust), 0)
-        self.assertEqual(data["reward"], 1)
+        self.assertEqual(data["reward"], 145)
 
     def test_2(self):
         """
@@ -115,7 +115,7 @@ class TestGame(unittest.TestCase):
         self.assertEqual(round(game.lander.vy), -31)
         self.assertEqual(round(game.lander.angle), 0)
         self.assertEqual(round(game.lander.thrust), 4)
-        self.assertEqual(data["reward"], 1)
+        self.assertEqual(data["reward"], 268)
 
     def test_3(self):
         """
@@ -171,7 +171,7 @@ class TestGame(unittest.TestCase):
         self.assertEqual(round(game.lander.vy), -32)
         self.assertEqual(round(game.lander.angle), 0)
         self.assertEqual(round(game.lander.thrust), 4)
-        self.assertEqual(data["reward"], 1)
+        self.assertEqual(data["reward"], 461)
 
     def test_4(self):
         """
@@ -227,7 +227,7 @@ class TestGame(unittest.TestCase):
         self.assertEqual(round(game.lander.vy), -33)
         self.assertEqual(round(game.lander.angle), 0)
         self.assertEqual(round(game.lander.thrust), 4)
-        self.assertEqual(data["reward"], 1)
+        self.assertEqual(data["reward"], 492)
 
     def test_5(self):
         """
@@ -283,7 +283,7 @@ class TestGame(unittest.TestCase):
         self.assertEqual(round(game.lander.vy), -28)
         self.assertEqual(round(game.lander.angle), 0)
         self.assertEqual(round(game.lander.thrust), 0)
-        self.assertEqual(data["reward"], 1)
+        self.assertEqual(data["reward"], 657)
 
     def test_6(self):
         """
@@ -300,18 +300,18 @@ class TestGame(unittest.TestCase):
         """
         # test du crash sur la bonne zone
         game = GameManager()
-        game.set_testcase("testcases/test3.json")
+        game.set_testcase("testcases/test2.json")
 
         while True:
             lander, done, data = game.apply_action(action=Action(0, 0))
             if done:
                 break
 
-        self.assertEqual(data["reward"], -1)
-        self.assertEqual(int(game.lander.x), 3427)
-        self.assertEqual(round(game.lander.y), 637)
-        self.assertEqual(round(game.lander.vx), -90)
-        self.assertEqual(round(game.lander.vy), -130)
+        self.assertEqual(data["reward"], -184.729)
+        self.assertEqual(int(game.lander.x), 2685)
+        self.assertEqual(round(game.lander.y), 100)
+        self.assertEqual(round(game.lander.vx), -100)
+        self.assertEqual(round(game.lander.vy), -145)
         self.assertEqual(round(game.lander.angle), 0)
         self.assertEqual(round(game.lander.thrust), 0)
 
@@ -328,7 +328,7 @@ class TestGame(unittest.TestCase):
 
         On peut donc verifier qu'apres l'action N, on a bien le state N+1
         """
-        # test du crash sur la mauvaise zone
+        # test du crash sur la mauvaise zone coté gauche
         game = GameManager()
         game.set_testcase("testcases/test4.json")
 
@@ -337,10 +337,40 @@ class TestGame(unittest.TestCase):
             if done:
                 break
 
-        self.assertEqual(data["reward"], -1)
+        self.assertAlmostEqual(data["reward"], -2935.783, places=1)
         self.assertEqual(int(game.lander.x), 3279)
         self.assertEqual(int(game.lander.y), 1265)
         self.assertEqual(round(game.lander.vx), 100)
         self.assertEqual(round(game.lander.vy), -104)
+        self.assertEqual(round(game.lander.angle), 0)
+        self.assertEqual(round(game.lander.thrust), 0)
+
+    def test_8(self):
+        """
+        From a fixed simulation on CG, we can have:
+
+        - state 0
+        - action 0
+        - state 1
+        - action 1
+        -...
+        - action N
+
+        On peut donc verifier qu'apres l'action N, on a bien le state N+1
+        """
+        # test du crash sur la mauvaise zone coté droit
+        game = GameManager()
+        game.set_testcase("testcases/test5.json")
+
+        while True:
+            lander, done, data = game.apply_action(action=Action(0, 0))
+            if done:
+                break
+
+        self.assertAlmostEqual(data["reward"], -7869.619, places=1)
+        self.assertEqual(int(game.lander.x), 5061)
+        self.assertEqual(int(game.lander.y), 1163)  # dunno the difference here
+        self.assertEqual(round(game.lander.vx), -50)
+        self.assertEqual(round(game.lander.vy), -108)
         self.assertEqual(round(game.lander.angle), 0)
         self.assertEqual(round(game.lander.thrust), 0)

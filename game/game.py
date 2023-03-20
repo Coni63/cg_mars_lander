@@ -43,7 +43,9 @@ class GameManager:
         self.turn += 1
 
         # game is done when the target is the last checkpoint which is a fictive one aligned with the 2 last ones
-        self.done = data["reward"] != 0
+        if data["done"]:
+            self.done = True
+            data = self.get_reward(data)
 
         return self.lander, self.done, data
 
@@ -63,3 +65,15 @@ class GameManager:
 
         self.turn = 0
         self.done = False
+
+    def get_reward(self, data):
+        if data["valid_landing_area"] and data["valid_condition"]:
+            reward = data["fuel"]
+        elif data["valid_landing_area"] and not data["valid_condition"]:
+            reward = -max(abs(data["vx"]) - 20, 0) - max(abs(data["vy"]) - 40, 0) - data["angle"]
+        else:
+            # it is quite unlikely probable that the reward for a crash on the proper area is below than -300
+            reward = -300 - self.ground.get_distance(data["intersection_pt"], data["segment_id"])
+
+        data["reward"] = reward
+        return data
