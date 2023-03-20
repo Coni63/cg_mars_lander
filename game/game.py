@@ -47,6 +47,14 @@ class GameManager:
             self.done = True
             data = self.get_reward(data)
 
+        # check out of boundary to reduce the search space (all solutions fit in the boundary)
+        if self.lander.x < 0 or self.lander.y > 3000 or self.lander.x > 7000:
+            self.done = True
+            data = {
+                "done": True,
+                "out_of_boundary": True
+            }
+
         return self.lander, self.done, data
 
     def reset(self):
@@ -67,7 +75,9 @@ class GameManager:
         self.done = False
 
     def get_reward(self, data):
-        if data["valid_landing_area"] and data["valid_condition"]:
+        if "out_of_boundary" in data:
+            reward = -1e6
+        elif data["valid_landing_area"] and data["valid_condition"]:
             reward = data["fuel"]
         elif data["valid_landing_area"] and not data["valid_condition"]:
             reward = -max(abs(data["vx"]) - 20, 0) - max(abs(data["vy"]) - 40, 0) - data["angle"]
