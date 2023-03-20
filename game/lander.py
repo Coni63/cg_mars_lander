@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import sys
 import math
-from typing import Tuple
 
 from .point import Point
 from .ground import Ground
@@ -40,16 +39,13 @@ class Lander(Point):
         self._move()
         curr_pos = Point(self.x, self.y)
 
-        reward, intersection_pt = self._check_landing(prev_pos, curr_pos, ground)
-        if intersection_pt is not None:
-            self.x = intersection_pt.x
-            self.y = intersection_pt.y
+        info = self._check_landing(prev_pos, curr_pos, ground)
+        if "intersection_pt" in info:
+            self.x = info["intersection_pt"].x
+            self.y = info["intersection_pt"].y
 
         self._end()
-        return {
-            "reward": reward,
-            "intersection_pt": intersection_pt
-        }
+        return info
 
     def describe(self):  # pragma: no cover
         print("", file=sys.stderr, flush=True)
@@ -81,19 +77,40 @@ class Lander(Point):
     def _is_valid_for_landing(self):
         return self.angle == 0 and abs(self.vx) < 20.5 and abs(self.vy) < 40.5  # finally it is working if the round is below 40 or 20
 
-    def _check_landing(self, prev_pos: Point, curr_pos: Point, ground: Ground) -> Tuple[int, Point]:
-        for p1, p2, is_landing_area in ground:
+    def _check_landing(self, prev_pos: Point, curr_pos: Point, ground: Ground) -> dict:
+        for i, (p1, p2, is_landing_area) in enumerate(ground):
             pt = Intersection.doIntersect(p1, p2, prev_pos, curr_pos)
             if pt is not None:
                 if is_landing_area:
                     if self._is_valid_for_landing():
-                        return 1, pt
+                        return {
+                            "done": True,
+                            "valid_landing_area": True,
+                            "valid_condition": True,
+                            "intersection_pt": pt,
+                            "fuel": self.fuel
+                        }
                     else:
-                        print("jkgfh")
-                        return -1, pt
+                        return {
+                            "done": True,
+                            "valid_landing_area": True,
+                            "valid_condition": False,
+                            "intersection_pt": pt,
+                            "vx": self.vx,
+                            "vy": self.vy,
+                            "angle": self.angle
+                        }
                 else:
-                    return -1, pt
-        return 0, None
+                    return {
+                        "done": True,
+                        "intersection_pt": pt,
+                        "valid_landing_area": False,
+                        "valid_condition": False,
+                        "segment_id": i
+                    }
+        return {
+            "done": False
+        }
 
     def _move(self):
         alpha = math.radians(self.angle)
