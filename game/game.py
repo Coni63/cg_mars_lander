@@ -52,7 +52,8 @@ class GameManager:
             self.done = True
             data = {
                 "done": True,
-                "out_of_boundary": True
+                "out_of_boundary": True,
+                "reward": -1e6
             }
 
         return self.lander, self.done, data
