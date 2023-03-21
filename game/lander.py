@@ -32,8 +32,12 @@ class Lander(Point):
         return Lander(x=self.x, y=self.y, vx=self.vx, vy=self.vy, angle=self.angle, fuel=self.fuel, thrust=self.thrust)
 
     def applyMove(self, action: Action, ground: Ground, verbose: bool = False) -> int:
-        self._rotate(action.angle)
-        self._boost(action.thrust)
+        if action.relative:
+            self._rotate_relative(action.angle)
+            self._boost_relative(action.thrust)
+        else:
+            self._rotate(action.angle)
+            self._boost(action.thrust)
 
         prev_pos = Point(self.x, self.y)
         self._move()
@@ -55,14 +59,30 @@ class Lander(Point):
         print(f"Pod Thrust         : {self.thrust}", file=sys.stderr, flush=True)
         print(f"Pod Fuel           : {self.fuel}", file=sys.stderr, flush=True)
 
+    def _rotate_relative(self, target_angle: float): 
+        # if we provide an action that is the rotation of angle and not the targeted angle
+        # we just turn within valid range
+        self.angle = max(min(self.angle + target_angle, 90), -90)
+
     def _rotate(self, target_angle: float) -> None:
+        # if we provide an action that is the targeted angle and not rotation
+
         # We can't turn more than 15 degrees in one turn
         self.angle += max(min(target_angle - self.angle, 15.0), -15.0)
 
         # The angle is limited to -90 / 90
         self.angle = max(min(self.angle, 90), -90)
 
-    def _boost(self, thrust: float) -> None:
+    def _boost_relative(self, thrust: int) -> None:
+        # if we just provide the change of thrust we want
+        self.thrust = max(min(self.thrust + thrust, 4), 0)
+
+        # we need to check with fuel
+        self.thrust = min(self.thrust, self.fuel)
+
+    def _boost(self, thrust: int) -> None:
+        # if we provide the targeted thrust
+
         # no need to clam the power -- will be in [0, 4]
         if thrust > self.thrust:
             offset = 1
