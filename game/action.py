@@ -10,11 +10,11 @@ if TYPE_CHECKING:
 @dataclass
 class Action:
     thrust: int
-    angle: float
+    angle: int
     relative: bool = False
 
     def __str__(self):
-        return f"{self.thrust},{self.angle}"
+        return f"{self.angle} {self.thrust}"
 
     @staticmethod
     def from_str(s, relative=False):
@@ -30,7 +30,7 @@ class Action:
 
         delta_thrust = action.thrust - lander.thrust
         thrust = min(max(delta_thrust, -1), 1)
-        return Action(angle=angle, thrust=thrust, relative=True)
+        return Action(angle=int(angle), thrust=int(thrust), relative=True)
 
     @staticmethod
     def convert_to_absolute(action: Action, lander: Lander) -> Action:

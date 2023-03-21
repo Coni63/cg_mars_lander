@@ -436,6 +436,62 @@ class TestGame(unittest.TestCase):
         self.assertEqual(round(game.lander.thrust), 4)
         self.assertEqual(data["reward"], 268)
 
+    def test_1_relative(self):
+        """
+        From a fixed simulation on CG, we can have:
+
+        - state 0
+        - action 0
+        - state 1
+        - action 1
+        -...
+        - action N
+
+        On peut donc verifier qu'apres l'action N, on a bien le state N+1
+        """
+
+        actions_str = "-15 0;-15 1;-15 0;-14 1;0 0;0 0;0 1;7 0;2 0;3 0;4 1;3 0;2 0;5 0;0 0;3 0;4 0;3 0;3 0;2 0;2 0;3 0;3 0;2 0;0 0;5 0;2 0;0 0;3 0;2 0;0 0;1 0;2 0;0 0;3 0;-3 0;2 0;3 0;0 0;0 0;0 0;3 0;0 0;-1 0;0 0;3 0;-2 0;2 0;-3 0;3 0;-2 0;0 0;2 0;-2 0;0 0;2 0;-3 0;0 0;-2 0;0 0;0 0;-3 0;0 0;0 0;0 0;0 0;-2 0;0 0;0 0;0 0;-7 -1;0 0;0 0;0 0;0 0;0 0;0 0;0 0;0 0;0 1;0 0;0 -1;0 1;0 0;0 0;0 -1;0 1;0 0;0 -1;0 1;0 0;0 0;0 -1;0 1;0 0;0 -1;0 1;0 0;0 0;0 -1;0 1;0 0;0 -1;0 1;0 0;0 0;0 -1;0 1;0 0;0 -1;0 -1;0 -1;0 -1"
+        positions_str = "2500 2700 0 0 0 0;2500 2698 0 -4 -15 0;2500 2693 0 -7 -30 1;2501 2685 1 -10 -45 1;2503 2674 3 -12 -59 2;2507 2660 5 -15 -59 2;2512 2644 6 -18 -59 2;2520 2626 9 -20 -59 3;2530 2605 11 -22 -52 3;2543 2582 14 -23 -50 3;2557 2558 16 -25 -47 3;2574 2533 19 -26 -43 4;2594 2506 21 -27 -40 4;2617 2480 24 -27 -38 4;2641 2452 26 -27 -33 4;2668 2425 28 -28 -33 4;2697 2397 30 -28 -30 4;2728 2369 32 -28 -26 4;2760 2341 33 -28 -23 4;2794 2312 35 -28 -20 4;2829 2284 36 -28 -18 4;2866 2256 37 -28 -16 4;2903 2229 38 -28 -13 4;2941 2201 39 -27 -10 4;2980 2174 39 -27 -8 4;3019 2147 40 -27 -8 4;3059 2120 40 -27 -3 4;3099 2093 40 -26 -1 4;3139 2067 40 -26 -1 4;3179 2041 40 -26 2 4;3218 2015 40 -26 4 4;3258 1990 39 -25 4 4;3297 1965 39 -25 5 4;3336 1940 38 -25 7 4;3374 1915 38 -24 7 4;3411 1891 37 -24 10 4;3448 1867 37 -24 7 4;3485 1843 36 -24 9 4;3521 1819 35 -24 12 4;3555 1796 34 -23 12 4;3590 1772 34 -23 12 4;3623 1749 33 -23 12 4;3655 1726 32 -23 15 4;3686 1704 31 -23 15 4;3717 1681 30 -22 14 4;3746 1659 29 -22 14 4;3774 1636 28 -22 17 4;3801 1614 27 -22 15 4;3827 1592 25 -22 17 4;3852 1571 24 -22 14 4;3876 1549 23 -22 17 4;3899 1527 22 -21 15 4;3921 1506 21 -21 15 4;3941 1485 20 -21 17 4;3961 1463 19 -21 15 4;3979 1442 18 -21 15 4;3997 1422 17 -21 17 4;4013 1401 16 -21 14 4;4029 1380 15 -20 14 4;4043 1360 14 -20 12 4;4057 1340 13 -20 12 4;4069 1320 12 -20 12 4;4082 1300 12 -20 9 4;4093 1281 11 -19 9 4;4104 1261 11 -19 9 4;4114 1242 10 -19 9 4;4124 1223 9 -19 9 4;4133 1205 9 -18 7 4;4141 1187 8 -18 7 4;4149 1169 8 -18 7 4;4157 1151 7 -18 7 4;4164 1133 7 -18 0 3;4171 1114 7 -19 0 3;4179 1095 7 -20 0 3;4186 1075 7 -20 0 3;4193 1054 7 -21 0 3;4201 1032 7 -22 0 3;4208 1010 7 -23 0 3;4215 987 7 -23 0 3;4223 964 7 -24 0 3;4230 940 7 -24 0 4;4237 916 7 -23 0 4;4245 892 7 -24 0 3;4252 868 7 -24 0 4;4259 845 7 -24 0 4;4266 821 7 -23 0 4;4274 797 7 -24 0 3;4281 774 7 -24 0 4;4288 750 7 -23 0 4;4296 726 7 -24 0 3;4303 702 7 -24 0 4;4310 679 7 -24 0 4;4318 655 7 -23 0 4;4325 632 7 -24 0 3;4332 608 7 -24 0 4;4340 584 7 -23 0 4;4347 560 7 -24 0 3;4354 536 7 -24 0 4;4362 513 7 -24 0 4;4369 489 7 -23 0 4;4376 466 7 -24 0 3;4384 442 7 -24 0 4;4391 418 7 -23 0 4;4398 395 7 -24 0 3;4405 371 7 -24 0 4;4413 347 7 -24 0 4;4420 324 7 -23 0 4;4427 300 7 -24 0 3;4435 276 7 -24 0 4;4442 253 7 -23 0 4;4449 229 7 -24 0 3;4457 204 7 -26 0 2;4464 177 7 -28 0 1"
+
+        game = GameManager()
+        game.set_testcase("testcases/test1.json")
+
+        actions = [Action.from_str(s, relative=True) for s in actions_str.split(";")]
+
+        # game.ground.describe()
+        # game.lander.describe()
+
+        start_state, *states = [[int(x) for x in s.split()] for s in positions_str.split(";")]  # 1 step longer that actions
+
+        self.assertEqual(game.lander.x, start_state[0])
+        self.assertEqual(game.lander.y, start_state[1])
+        self.assertEqual(game.lander.vx, start_state[2])
+        self.assertEqual(game.lander.vy, start_state[3])
+        self.assertEqual(game.lander.angle, start_state[4])
+        self.assertEqual(game.lander.thrust, start_state[5])
+
+        for i, (action, (x, y, vx, vy, angle, thrust)) in enumerate(zip(actions, states)):
+            game.apply_action(action=action)
+
+            self.assertEqual(round(game.lander.x), x, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.y), y, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.vx), vx, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.vy), vy, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.angle), angle, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertEqual(round(game.lander.thrust), thrust, msg=f"Error step {i+1} / {len(actions)}")
+            self.assertFalse(game.done)
+
+        lander, done, data = game.apply_action(action=actions[-1])
+        self.assertTrue(game.done)
+        self.assertEqual(game.lander.fuel, 145)
+        self.assertEqual(int(game.lander.x), 4470)
+        self.assertEqual(round(game.lander.y), 150)
+        self.assertEqual(round(game.lander.vx), 7)
+        self.assertEqual(round(game.lander.vy), -32)
+        self.assertEqual(round(game.lander.angle), 0)
+        self.assertEqual(round(game.lander.thrust), 0)
+        self.assertEqual(data["reward"], 145)
+
     def test_2_absolute(self):
         """
         From a fixed simulation on CG, we can have:
