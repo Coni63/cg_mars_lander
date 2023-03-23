@@ -24,13 +24,14 @@ def get_ID(game: GameManager) -> int:
     # return sum([game.lander.x, game.lander.y, game.lander.vx, game.lander.vy, game.lander.angle])
 
 
-def train(from_DB=True, file_path = "testcases/test*.json", n=10000):
+def train(from_DB=True, file_path="testcases/test*.json", n=10000):
     files = glob.glob(file_path)
     game = GameManager()
     with open("testcases/default_solutions.json", "r") as f:
         base_seq = json.load(f)
 
     saver = Saver("results.db")
+    saver2 = Saver("results_v2.db")
     for file in files:
         game.set_testcase(file)
         testset = Path(file).stem
@@ -48,13 +49,13 @@ def train(from_DB=True, file_path = "testcases/test*.json", n=10000):
         optimised_actions, best_score = agent.run(n)
 
         actions_str = ";".join(map(str, optimised_actions))
-        saver.save(testset, actions_str, best_score)
+        saver2.save(testset, actions_str, best_score)
         print(file, ID, default_score, best_score)
 
 
 def get_json():
     files = glob.glob("testcases/test*.json")
-    saver = Saver("results.db")
+    saver = Saver("results_v2.db")
     game = GameManager()
 
     total_score = 0
@@ -71,6 +72,7 @@ def get_json():
     with open("testcases/solutions.json", "w") as f:
         json.dump(ans, f)
 
+
 if __name__ == "__main__":
-    train(False, file_path="testcases/test4.json", n=25000)
+    train(True, file_path="testcases/test4.json", n=5000)
     get_json()
