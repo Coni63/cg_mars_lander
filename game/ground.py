@@ -44,7 +44,7 @@ class Ground:
             yield self.ground[i], self.ground[i+1], i == self.landing_id
 
     def get_landing(self) -> Tuple[Point, Point]:
-        self.ground[self.i], self.ground[self.i+1]
+        return self.ground[self.landing_id], self.ground[self.landing_id+1]
 
     def _find_landing(self):
         for i in range(self.n-1):
