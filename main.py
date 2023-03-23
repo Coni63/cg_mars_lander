@@ -1,31 +1,76 @@
 import glob
-from game import GameManager, Action
+import json
+from pathlib import Path
+from game import GameManager, Action, Point
+from ai.AG import Agent, Saver
 
 
-if __name__ == "__main__":
-    files = glob.glob("testcases/test1.json")
-
-    game = GameManager()
-    game.set_testcase(files[0])
-
-    base_seq = "-59 0;-59 1;-59 1;-59 2;-59 2;-59 2;-59 3;-52 3;-50 3;-47 3;-43 4;-40 4;-38 4;-33 4;-33 4;-30 4;-26 4;-23 4;-20 4;-18 4;-16 4;-13 4;-10 4;-8 4;-8 4;-3 4;-1 4;-1 4;2 4;4 4;4 4;5 4;7 4;7 4;10 4;7 4;9 4;12 4;12 4;12 4;12 4;15 4;15 4;14 4;14 4;17 4;15 4;17 4;14 4;17 4;15 4;15 4;17 4;15 4;15 4;17 4;14 4;14 4;12 4;12 4;12 4;9 4;9 4;9 4;9 4;9 4;7 4;7 4;7 4;7 4;0 3;0 3;0 3;0 3;0 3;0 3;0 3;0 3;0 3;0 4;0 4;0 3;0 4;0 4;0 4;0 3;0 4;0 4;0 3;0 4;0 4;0 4;0 3;0 4;0 4;0 3;0 4;0 4;0 4;0 3;0 4;0 4;0 3;0 4;0 4;0 4;0 3;0 4;0 4;0 0;0 0;0 0;0 0"
-    rel_seq = "-15 0;-15 1;-15 0;-14 1;0 0;0 0;0 1;7 0;2 0;3 0;4 1;3 0;2 0;5 0;0 0;3 0;4 0;3 0;3 0;2 0;2 0;3 0;3 0;2 0;0 0;5 0;2 0;0 0;3 0;2 0;0 0;1 0;2 0;0 0;3 0;-3 0;2 0;3 0;0 0;0 0;0 0;3 0;0 0;-1 0;0 0;3 0;-2 0;2 0;-3 0;3 0;-2 0;0 0;2 0;-2 0;0 0;2 0;-3 0;0 0;-2 0;0 0;0 0;-3 0;0 0;0 0;0 0;0 0;-2 0;0 0;0 0;0 0;-7 -1;0 0;0 0;0 0;0 0;0 0;0 0;0 0;0 0;0 1;0 0;0 -1;0 1;0 0;0 0;0 -1;0 1;0 0;0 -1;0 1;0 0;0 0;0 -1;0 1;0 0;0 -1;0 1;0 0;0 0;0 -1;0 1;0 0;0 -1;0 1;0 0;0 0;0 -1;0 1;0 0;0 -1;0 -1;0 -1;0 -1"
-    game.lander.describe()
-    game.ground.describe()
-
-    # actions = [Action.from_str(s) for s in base_seq.split(";")]
-    actions = [Action.from_str(s, relative=True) for s in rel_seq.split(";")]
-
-    for action in actions:
+def convert_full_sequence(actions, game):
+    game.reset()
+    transformed_actions = []
+    for i, action in enumerate(actions):
+        transformed_actions.append(Action.convert_to_relative(action, game.lander))
         lander, done, info = game.apply_action(action=action)
-
         if done:
-            print(info)
             break
 
+    print(";".join(map(str, transformed_actions)))
 
-    # make_simulations(files, sample=100)
 
-    # make_dictionary(files)
+def get_ID(game: GameManager) -> int:
+    pt1, pt2 = game.ground.get_landing()
+    lander = Point(game.lander.x, game.lander.y)
+    return int(lander.distance(pt2))
+    # return sum([game.lander.x, game.lander.y, game.lander.vx, game.lander.vy, game.lander.angle])
 
-    # eval(files)
+
+def train(from_DB=True, file_path = "testcases/test*.json", n=10000):
+    files = glob.glob(file_path)
+    game = GameManager()
+    with open("testcases/default_solutions.json", "r") as f:
+        base_seq = json.load(f)
+
+    saver = Saver("results.db")
+    for file in files:
+        game.set_testcase(file)
+        testset = Path(file).stem
+
+        if from_DB:
+            base_actions, default_score = saver.get_best(testset)
+        else:
+            base_actions = base_seq[testset]["relative"]
+            default_score = base_seq[testset]["score"]
+
+        actions = [Action.from_str(s, relative=True) for s in base_actions.split(";")]
+        ID = get_ID(game)
+
+        agent = Agent(actions, default_score, game)
+        optimised_actions, best_score = agent.run(n)
+
+        actions_str = ";".join(map(str, optimised_actions))
+        saver.save(testset, actions_str, best_score)
+        print(file, ID, default_score, best_score)
+
+
+def get_json():
+    files = glob.glob("testcases/test*.json")
+    saver = Saver("results.db")
+    game = GameManager()
+
+    total_score = 0
+    ans = {}
+    for file in files:
+        game.set_testcase(file)
+        testset = Path(file).stem
+        actions, score = saver.get_best(testset)
+        total_score += score
+        ID = get_ID(game)
+        ans[ID] = actions
+
+    print(total_score)
+    with open("testcases/solutions.json", "w") as f:
+        json.dump(ans, f)
+
+if __name__ == "__main__":
+    train(False, file_path="testcases/test4.json", n=25000)
+    get_json()
